@@ -2195,6 +2195,8 @@ in
 
   apparix = callPackage ../tools/misc/apparix { };
 
+  apple_set_os = callPackage ../misc/apple_set_os { };
+
   appleseed = callPackage ../tools/graphics/appleseed { };
 
   arping = callPackage ../tools/networking/arping { };
