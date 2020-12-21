@@ -1,12 +1,12 @@
-{ stdenv, fetchurl, jre_headless }:
+{ stdenv, fetchurl, nixosTests, jre_headless }:
 stdenv.mkDerivation {
   pname = "minecraft-server";
-  version = "1.16.2";
+  version = "1.16.4";
 
   src = fetchurl {
-    url = "https://launcher.mojang.com/v1/objects/c5f6fb23c3876461d46ec380421e42b289789530/server.jar";
+    url = "https://launcher.mojang.com/v1/objects/35139deedbd5182953cf1caa23835da59ca3d7cd/server.jar";
     # sha1 because that comes from mojang via api
-    sha1 = "c5f6fb23c3876461d46ec380421e42b289789530";
+    sha1 = "35139deedbd5182953cf1caa23835da59ca3d7cd";
   };
 
   preferLocalBuild = true;
@@ -25,7 +25,10 @@ stdenv.mkDerivation {
 
   phases = "installPhase";
 
-  passthru.updateScript = ./update.sh;
+  passthru = {
+    tests = { inherit (nixosTests) minecraft-server; };
+    updateScript = ./update.sh;
+  };
 
   meta = with stdenv.lib; {
     description = "Minecraft Server";
