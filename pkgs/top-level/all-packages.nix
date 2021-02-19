@@ -2693,7 +2693,7 @@ in
 
   circus = callPackage ../tools/networking/circus { };
 
-  citrix_workspace = citrix_workspace_20_12_0;
+  citrix_workspace = citrix_workspace_21_01_0;
 
   inherit (callPackage ../applications/networking/remote/citrix-workspace { })
     citrix_workspace_20_04_0
@@ -2701,6 +2701,7 @@ in
     citrix_workspace_20_09_0
     citrix_workspace_20_10_0
     citrix_workspace_20_12_0
+    citrix_workspace_21_01_0
   ;
 
   citra = libsForQt5.callPackage ../misc/emulators/citra { };
@@ -26899,10 +26900,7 @@ in
     nixFlakes;
 
   nixops = callPackage ../tools/package-management/nixops { };
-
-  nixops_1_6_1 = callPackage ../tools/package-management/nixops/nixops-v1_6_1.nix {};
-
-  nixopsUnstable = lowPrio (callPackage ../tools/package-management/nixops/unstable.nix { });
+  nixopsUnstable = nixops;
 
   nixops-dns = callPackage ../tools/package-management/nixops/nixops-dns.nix { };
 
