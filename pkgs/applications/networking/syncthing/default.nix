@@ -1,24 +1,29 @@
-{ buildGoModule, stdenv, lib, procps, fetchFromGitHub, nixosTests }:
+{ buildGoModule, stdenv, lib, procps, fetchFromGitHub, nixosTests, fetchpatch }:
 
 let
   common = { stname, target, postInstall ? "" }:
     buildGoModule rec {
-      version = "1.8.0";
+      version = "1.9.0";
       name = "${stname}-${version}";
 
       src = fetchFromGitHub {
         owner  = "syncthing";
         repo   = "syncthing";
         rev    = "v${version}";
-        sha256 = "047y2sy9zif19dlh098ihaski9f3b971q3mmqg97qgfzpa8z8fpr";
+        sha256 = "1p5wmcmv72hbd3dap9hqv4ryarsj8ljn833x9mcfgh8ff4k25qwr";
       };
 
-      vendorSha256 = "0l08d96226l135cqbv1qqw0136f5nzw7likc0nmhcm6ynzv83kj2";
+      vendorSha256 = "1mwjfv0l2n21srxsh8w18my2j8diim91jlg00ailiq9fwnvxxn8c";
 
       doCheck = false;
 
       patches = [
         ./add-stcli-target.patch
+        (fetchpatch {
+          name = "CVE-2021-21404.patch";
+          url = "https://github.com/syncthing/syncthing/commit/fb4fdaf4c0a79c22cad000c42ac1394e3ccb6a97.patch";
+          sha256 = "0xjh500fi50570dkf3xdaj2367ynn1cs95lypq6b0wi81kp7m540";
+        })
       ];
       BUILD_USER="nix";
       BUILD_HOST="nix";

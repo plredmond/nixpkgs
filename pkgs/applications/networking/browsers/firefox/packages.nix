@@ -7,16 +7,16 @@ in
 rec {
   firefox = commonCP rec {
     pname = "firefox";
-    ffversion = "85.0.1";
+    ffversion = "88.0";
     src = fetchurl {
       url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "0i0x1jvwrjvbdz90dgmf7lw3qj56y37nf5h3qs55263d0jgvnkqfc5dgjfzrq51z5a546lmbs4p97qiaf2p3d5wiv3lx8cw43n74axd";
+      sha512 = "f58f44f2f0d0f54eae5ab4fa439205feb8b9209b1bf2ea2ae0c9691e9e583bae2cbd4033edb5bdf4e37eda5b95fca688499bed000fe26ced8ff4bbc49347ce31";
     };
 
     meta = {
       description = "A web browser built from Firefox source tree";
       homepage = "http://www.mozilla.com/en-US/firefox/";
-      maintainers = with lib.maintainers; [ eelco andir ];
+      maintainers = with lib.maintainers; [ eelco ];
       platforms = lib.platforms.unix;
       badPlatforms = lib.platforms.darwin;
       broken = stdenv.buildPlatform.is32bit; # since Firefox 60, build on 32-bit platforms fails with "out of memory".
@@ -33,16 +33,16 @@ rec {
 
   firefox-esr-78 = commonCP rec {
     pname = "firefox-esr";
-    ffversion = "78.7.1esr";
+    ffversion = "78.10.0esr";
     src = fetchurl {
       url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "138dcfpdkp78yqgygac212vg5fm5ich2a82p7258ch8hk6bpvpdxbws4sdqwljs92x831dblcsshwkl06vh48899489gx87mdkqd0nm";
+      sha512 = "5e2cf137dc781855542c29df6152fa74ba749801640ade3cf01487ce993786b87a4f603d25c0af9323e67c7e15c75655523428c1c1426527b8623c7ded9f5946";
     };
 
     meta = {
       description = "A web browser built from Firefox Extended Support Release source tree";
       homepage = "http://www.mozilla.com/en-US/firefox/";
-      maintainers = with lib.maintainers; [ eelco andir ];
+      maintainers = with lib.maintainers; [ eelco ];
       platforms = lib.platforms.unix;
       badPlatforms = lib.platforms.darwin;
       broken = stdenv.buildPlatform.is32bit; # since Firefox 60, build on 32-bit platforms fails with "out of memory".

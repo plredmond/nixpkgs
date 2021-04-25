@@ -1,8 +1,8 @@
 { newScope, config, stdenv, fetchurl, makeWrapper
-, llvmPackages_11, ed, gnugrep, coreutils, xdg_utils
+, llvmPackages_11, llvmPackages_12, ed, gnugrep, coreutils, xdg_utils
 , glib, gtk3, gnome3, gsettings-desktop-schemas, gn, fetchgit
 , libva ? null
-, pipewire_0_2
+, pipewire
 , gcc, nspr, nss, runCommand
 , lib
 
@@ -12,7 +12,6 @@
 , gnomeSupport ? false, gnome ? null
 , gnomeKeyringSupport ? false
 , proprietaryCodecs ? true
-, enablePepperFlash ? false
 , enableWideVine ? false
 , useVaapi ? false # Deprecated, use enableVaapi instead!
 , enableVaapi ? false # Disabled by default due to unofficial support
@@ -42,13 +41,12 @@ let
           inherit (upstream-info.deps.gn) url rev sha256;
         };
       });
+    } // lib.optionalAttrs (lib.versionAtLeast upstream-info.version "90") {
+      llvmPackages = llvmPackages_12;
+      stdenv = llvmPackages_12.stdenv;
     });
 
     browser = callPackage ./browser.nix { inherit channel enableWideVine ungoogled; };
-
-    plugins = callPackage ./plugins.nix {
-      inherit enablePepperFlash;
-    };
 
     ungoogled-chromium = callPackage ./ungoogled.nix {};
   };
@@ -174,16 +172,14 @@ in stdenv.mkDerivation {
 
   buildCommand = let
     browserBinary = "${chromiumWV}/libexec/chromium/chromium";
-    getWrapperFlags = plugin: "$(< \"${plugin}/nix-support/wrapper-flags\")";
-    libPath = stdenv.lib.makeLibraryPath [ libva pipewire_0_2 ];
+    libPath = stdenv.lib.makeLibraryPath [ libva pipewire ];
 
   in with stdenv.lib; ''
     mkdir -p "$out/bin"
 
     eval makeWrapper "${browserBinary}" "$out/bin/chromium" \
       --add-flags ${escapeShellArg (escapeShellArg commandLineArgs)} \
-      ${optionalVaapiFlags} \
-      ${concatMapStringsSep " " getWrapperFlags chromium.plugins.enabled}
+      ${optionalVaapiFlags}
 
     ed -v -s "$out/bin/chromium" << EOF
     2i

@@ -17,15 +17,14 @@
 , protobuf, speechd, libXdamage, cups
 , ffmpeg, libxslt, libxml2, at-spi2-core
 , jre8
-, pipewire_0_2
+, pipewire
 , libva
+, libdrm, wayland, mesa, libxkbcommon # Ozone
 
 # optional dependencies
 , libgcrypt ? null # gnomeSupport || cupsSupport
-, libdrm ? null, wayland ? null, mesa ? null, libxkbcommon ? null # useOzone
 
 # package customization
-, useOzone ? true
 , gnomeSupport ? false, gnome ? null
 , gnomeKeyringSupport ? false, libgnome-keyring3 ? null
 , proprietaryCodecs ? true
@@ -141,13 +140,13 @@ let
       libXScrnSaver libXcursor libXtst libxshmfence libGLU libGL
       pciutils protobuf speechd libXdamage at-spi2-core
       jre
-      pipewire_0_2
+      pipewire
       libva
+      libdrm wayland mesa.drivers libxkbcommon
     ] ++ optional gnomeKeyringSupport libgnome-keyring3
       ++ optionals gnomeSupport [ gnome.GConf libgcrypt ]
       ++ optionals cupsSupport [ libgcrypt cups ]
-      ++ optional pulseSupport libpulseaudio
-      ++ optionals useOzone [ libdrm wayland mesa.drivers libxkbcommon ];
+      ++ optional pulseSupport libpulseaudio;
 
     patches = [
       ./patches/no-build-timestamps.patch # Optional patch to use SOURCE_DATE_EPOCH in compute_build_timestamp.py (should be upstreamed)
@@ -157,7 +156,16 @@ let
       # To fix the build of chromiumBeta and chromiumDev:
       "b5b80df7dafba8cafa4c6c0ba2153dfda467dfc9" # add dependency on opus in webcodecs
       "1r4wmwaxz5xbffmj5wspv2xj8s32j9p6jnwimjmalqg3al2ba64x"
-    );
+    ) ++ optional (chromiumVersionAtLeast "90")
+      ./patches/fix-missing-atspi2-dependency.patch
+    ++ optionals (chromiumVersionAtLeast "91") [
+      ./patches/closure_compiler-Use-the-Java-binary-from-the-system.patch
+      (githubPatch
+        # Revert "Reland #7 of "Force Python 3 to be used in build.""
+        "38b6a9a8e5901766613879b6976f207aa163588a"
+        "1lvxbd7rl6hz5j6kh6q83yb6vd9g7anlqbai8g1w1bp6wdpgwvp9"
+      )
+    ];
 
     postPatch = ''
       # remove unused third-party
@@ -226,11 +234,11 @@ let
     '';
 
     gnFlags = mkGnFlags ({
+      is_official_build = true;
       custom_toolchain = "//build/toolchain/linux/unbundle:default";
       host_toolchain = "//build/toolchain/linux/unbundle:default";
-      is_official_build = true;
+      system_wayland_scanner_path = "${wayland}/bin/wayland-scanner";
 
-      use_vaapi = !stdenv.isAarch64; # TODO: Remove once M88 is released
       use_sysroot = false;
       use_gnome_keyring = gnomeKeyringSupport;
       use_gio = gnomeSupport;
@@ -251,13 +259,10 @@ let
       symbol_level = 0;
       fieldtrial_testing_like_official_build = true;
 
-      # Google API keys, see:
-      #   http://www.chromium.org/developers/how-tos/api-keys
-      # Note: These are for NixOS/nixpkgs use ONLY. For your own distribution,
-      # please get your own set of keys.
+      # Google API key, see: https://www.chromium.org/developers/how-tos/api-keys
+      # Note: The API key is for NixOS/nixpkgs use ONLY.
+      # For your own distribution, please get your own set of keys.
       google_api_key = "AIzaSyDGi15Zwl11UNe6Y-5XW_upsfyw31qwZPI";
-      google_default_client_id = "404761575300.apps.googleusercontent.com";
-      google_default_client_secret = "9rIFQjfnkykEmqb6FfjJQD1D";
     } // optionalAttrs proprietaryCodecs {
       # enable support for the H.264 codec
       proprietary_codecs = true;
@@ -266,16 +271,8 @@ let
     } // optionalAttrs pulseSupport {
       use_pulseaudio = true;
       link_pulseaudio = true;
-    } // optionalAttrs useOzone {
-      use_ozone = true;
-      use_xkbcommon = true;
-      use_glib = true;
-      use_gtk = true;
-      use_system_libwayland = true;
-      use_system_minigbm = true;
-      use_system_libdrm = true;
-      system_wayland_scanner_path = "${wayland}/bin/wayland-scanner";
     } // optionalAttrs (chromiumVersionAtLeast "89") {
+      rtc_pipewire_version = "0.3"; # TODO: Can be removed once ungoogled-chromium is at M90
       # Disable PGO (defaults to 2 since M89) because it fails without additional changes:
       # error: Could not read profile ../../chrome/build/pgo_profiles/chrome-linux-master-1610647094-405a32bcf15e5a84949640f99f84a5b9f61e2f2e.profdata: Unsupported instrumentation profile format version
       chrome_pgo_phase = 0;

@@ -554,7 +554,7 @@ in
 
   _1password = callPackage ../applications/misc/1password { };
 
-  _1password-gui = callPackage ../tools/security/1password-gui { };
+  _1password-gui = callPackage ../applications/misc/1password-gui { };
 
   _6tunnel = callPackage ../tools/networking/6tunnel { };
 
@@ -2065,9 +2065,7 @@ in
 
   gringo = callPackage ../tools/misc/gringo { };
 
-  grobi = callPackage ../tools/X11/grobi {
-    buildGoModule = buildGo114Module;
-  };
+  grobi = callPackage ../tools/X11/grobi { };
 
   gscan2pdf = callPackage ../applications/graphics/gscan2pdf { };
 
@@ -2157,7 +2155,7 @@ in
 
   long-shebang = callPackage ../misc/long-shebang {};
 
-  lowdown = callPackage ../tools/typesetting/lowdown { };
+  inherit (callPackage ../tools/typesetting/lowdown { }) lowdown lowdown_0_8;
 
   numatop = callPackage ../os-specific/linux/numatop { };
 
@@ -2693,7 +2691,7 @@ in
 
   circus = callPackage ../tools/networking/circus { };
 
-  citrix_workspace = citrix_workspace_21_01_0;
+  citrix_workspace = citrix_workspace_21_03_0;
 
   inherit (callPackage ../applications/networking/remote/citrix-workspace { })
     citrix_workspace_20_04_0
@@ -2702,6 +2700,7 @@ in
     citrix_workspace_20_10_0
     citrix_workspace_20_12_0
     citrix_workspace_21_01_0
+    citrix_workspace_21_03_0
   ;
 
   citra = libsForQt5.callPackage ../misc/emulators/citra { };
@@ -2949,7 +2948,9 @@ in
     cudatoolkit_10_1
     cudatoolkit_10_2
     cudatoolkit_11
-    cudatoolkit_11_0;
+    cudatoolkit_11_0
+    cudatoolkit_11_1
+    cudatoolkit_11_2;
 
   cudatoolkit = cudatoolkit_10;
 
@@ -2968,9 +2969,23 @@ in
     cudnn_cudatoolkit_10_1
     cudnn_cudatoolkit_10_2
     cudnn_cudatoolkit_11
-    cudnn_cudatoolkit_11_0;
+    cudnn_cudatoolkit_11_0
+    cudnn_cudatoolkit_11_1
+    cudnn_cudatoolkit_11_2;
 
   cudnn = cudnn_cudatoolkit_10;
+
+  cutensorPackages = callPackages ../development/libraries/science/math/cutensor { };
+  inherit (cutensorPackages)
+    cutensor_cudatoolkit_10
+    cutensor_cudatoolkit_10_1
+    cutensor_cudatoolkit_10_2
+    cutensor_cudatoolkit_11
+    cutensor_cudatoolkit_11_0
+    cutensor_cudatoolkit_11_1
+    cutensor_cudatoolkit_11_2;
+
+  cutensor = cutensor_cudatoolkit_10;
 
   curlFull = curl.override {
     idnSupport = true;
@@ -3352,7 +3367,7 @@ in
 
   volctl = callPackage ../tools/audio/volctl { };
 
-  vorta = python3Packages.callPackage ../applications/backup/vorta { };
+  vorta = libsForQt5.callPackage ../applications/backup/vorta { };
 
   utahfs = callPackage ../applications/networking/utahfs { };
 
@@ -4570,11 +4585,12 @@ in
   iperf = iperf3;
 
   ipfs = ipfs_0_6;
-  ipfs_latest = ipfs_0_7;
+  ipfs_latest = ipfs_0_8;
   ipfs_0_6 = callPackage ../applications/networking/ipfs/0.6.nix {
     buildGoModule = buildGo114Module;
   };
   ipfs_0_7 = callPackage ../applications/networking/ipfs/0.7.nix { };
+  ipfs_0_8 = callPackage ../applications/networking/ipfs/0.8.nix { };
 
   ipfs-migrator = callPackage ../applications/networking/ipfs-migrator { };
   ipfs-cluster = callPackage ../applications/networking/ipfs-cluster {
@@ -5715,7 +5731,7 @@ in
   grocy = callPackage ../servers/grocy { };
 
   inherit (callPackage ../servers/nextcloud {})
-    nextcloud17 nextcloud18 nextcloud19 nextcloud20;
+    nextcloud17 nextcloud18 nextcloud19 nextcloud20 nextcloud21;
 
   nextcloud-client = libsForQt5.callPackage ../applications/networking/nextcloud-client { };
 
@@ -5739,7 +5755,8 @@ in
 
   noip = callPackage ../tools/networking/noip { };
 
-  nomad = nomad_0_11;
+  nomad = nomad_0_12;
+
   # Nomad never updates major go versions within a release series and is unsupported
   # on Go versions that it did not ship with. Due to historic bugs when compiled
   # with different versions we pin Go for all versions.
@@ -5982,20 +5999,19 @@ in
 
   opensm = callPackage ../tools/networking/opensm { };
 
-  openssh =
-    callPackage ../tools/networking/openssh {
-      hpnSupport = false;
-      etcDir = "/etc/ssh";
-      pam = if stdenv.isLinux then pam else null;
-    };
+  opensshPackages = dontRecurseIntoAttrs (callPackage ../tools/networking/openssh {});
 
-  openssh_hpn = pkgs.appendToName "with-hpn" (openssh.override {
-    hpnSupport = true;
-  });
+  openssh = opensshPackages.openssh.override {
+    etcDir = "/etc/ssh";
+  };
 
-  openssh_gssapi = pkgs.appendToName "with-gssapi" (openssh.override {
-    withGssapiPatches = true;
-  });
+  openssh_hpn = opensshPackages.openssh_hpn.override {
+    etcDir = "/etc/ssh";
+  };
+
+  openssh_gssapi = opensshPackages.openssh_gssapi.override {
+    etcDir = "/etc/ssh";
+  };
 
   opensp = callPackage ../tools/text/sgml/opensp { };
 
@@ -8490,6 +8506,7 @@ in
     };
   };
 
+  clang_12 = llvmPackages_12.clang;
   clang_11 = llvmPackages_11.clang;
   clang_10 = llvmPackages_10.clang;
   clang_9  = llvmPackages_9.clang;
@@ -9083,6 +9100,13 @@ in
     buildPackages = buildPackages // { stdenv = gcc8Stdenv; };
   });
 
+  go_1_16 = callPackage ../development/compilers/go/1.16.nix ({
+    inherit (darwin.apple_sdk.frameworks) Security Foundation;
+  } // lib.optionalAttrs (stdenv.cc.isGNU && stdenv.isAarch64) {
+    stdenv = gcc8Stdenv;
+    buildPackages = buildPackages // { stdenv = gcc8Stdenv; };
+  });
+
   go = go_1_15;
 
   go-repo-root = callPackage ../development/tools/go-repo-root { };
@@ -9329,6 +9353,7 @@ in
   lld_9 = llvmPackages_9.lld;
   lld_10 = llvmPackages_10.lld;
   lld_11 = llvmPackages_11.lld;
+  lld_12 = llvmPackages_12.lld;
 
   lldb = llvmPackages.lldb;
   lldb_5 = llvmPackages_5.lldb;
@@ -9338,10 +9363,12 @@ in
   lldb_9 = llvmPackages_9.lldb;
   lldb_10 = llvmPackages_10.lldb;
   lldb_11 = llvmPackages_11.lldb;
+  lldb_12 = llvmPackages_12.lldb;
 
   llvm = llvmPackages.llvm;
   llvm-manpages = llvmPackages.llvm-manpages;
 
+  llvm_12 = llvmPackages_12.llvm;
   llvm_11 = llvmPackages_11.llvm;
   llvm_10 = llvmPackages_10.llvm;
   llvm_9  = llvmPackages_9.llvm;
@@ -9393,6 +9420,14 @@ in
     buildLlvmTools = buildPackages.llvmPackages_11.tools;
     targetLlvmLibraries = targetPackages.llvmPackages_11.libraries;
   } // stdenv.lib.optionalAttrs (stdenv.hostPlatform.isi686 && buildPackages.stdenv.cc.isGNU) {
+    stdenv = gcc7Stdenv;
+  });
+
+  llvmPackages_12 = callPackage ../development/compilers/llvm/12 ({
+    inherit (stdenvAdapters) overrideCC;
+    buildLlvmTools = buildPackages.llvmPackages_12.tools;
+    targetLlvmLibraries = targetPackages.llvmPackages_12.libraries;
+  } // lib.optionalAttrs (stdenv.hostPlatform.isi686 && buildPackages.stdenv.cc.isGNU) {
     stdenv = gcc7Stdenv;
   });
 
@@ -9694,9 +9729,10 @@ in
   rust-cbindgen = callPackage ../development/tools/rust/cbindgen {
     inherit (darwin.apple_sdk.frameworks) Security;
   };
-  rust-cbindgen_0_15 = callPackage ../development/tools/rust/cbindgen/0_15.nix {
+  rust-cbindgen_latest = callPackage ../development/tools/rust/cbindgen/0_17.nix {
     inherit (darwin.apple_sdk.frameworks) Security;
   };
+
 
   rustup = callPackage ../development/tools/rust/rustup {
     inherit (darwin.apple_sdk.frameworks) CoreServices Security;
@@ -10495,7 +10531,7 @@ in
   aws-adfs = with python3Packages; toPythonApplication aws-adfs;
 
   inherit (callPackages ../development/tools/electron { })
-    electron electron_3 electron_4 electron_5 electron_6 electron_7 electron_8 electron_9 electron_10 electron_11;
+    electron electron_3 electron_4 electron_5 electron_6 electron_7 electron_8 electron_9 electron_10 electron_11 electron_12;
 
   autobuild = callPackage ../development/tools/misc/autobuild { };
 
@@ -11688,6 +11724,8 @@ in
   };
 
   vtable-dumper = callPackage ../development/tools/misc/vtable-dumper { };
+
+  whatsapp-for-linux = callPackage ../applications/networking/instant-messengers/whatsapp-for-linux { };
 
   whatstyle = callPackage ../development/tools/misc/whatstyle {
     inherit (llvmPackages) clang-unwrapped;
@@ -13065,6 +13103,8 @@ in
   jsoncpp = callPackage ../development/libraries/jsoncpp { };
 
   jsonnet = callPackage ../development/compilers/jsonnet { };
+
+  jsonnet-bundler = callPackage ../development/tools/jsonnet-bundler { };
 
   go-jsonnet = callPackage ../development/compilers/go-jsonnet { };
 
@@ -16097,6 +16137,9 @@ in
   buildGo115Package = callPackage ../development/go-packages/generic {
     go = buildPackages.go_1_15;
   };
+  buildGo116Package = callPackage ../development/go-packages/generic {
+    go = buildPackages.go_1_16;
+  };
 
   buildGoPackage = buildGo115Package;
 
@@ -16105,6 +16148,9 @@ in
   };
   buildGo115Module = callPackage ../development/go-modules/generic {
     go = buildPackages.go_1_15;
+  };
+  buildGo116Module = callPackage ../development/go-modules/generic {
+    go = buildPackages.go_1_16;
   };
 
   buildGoModule = buildGo115Module;
@@ -17708,6 +17754,13 @@ in
     ];
   };
 
+  linux_5_11 = callPackage ../os-specific/linux/kernel/linux-5.11.nix {
+    kernelPatches = [
+      kernelPatches.bridge_stp_helper
+      kernelPatches.request_key_helper
+    ];
+  };
+
   linux_testing = callPackage ../os-specific/linux/kernel/linux-testing.nix {
     kernelPatches = [
       kernelPatches.bridge_stp_helper
@@ -17942,7 +17995,7 @@ in
 
   # Update this when adding the newest kernel major version!
   # And update linux_latest_for_hardened below if the patches are already available
-  linuxPackages_latest = linuxPackages_5_10;
+  linuxPackages_latest = linuxPackages_5_11;
   linux_latest = linuxPackages_latest.kernel;
 
   # Realtime kernel packages.
@@ -17965,6 +18018,7 @@ in
   linuxPackages_4_19 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_19);
   linuxPackages_5_4 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_5_4);
   linuxPackages_5_10 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_5_10);
+  linuxPackages_5_11 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_5_11);
 
   # When adding to the list above:
   # - Update linuxPackages_latest to the latest version
@@ -18002,7 +18056,7 @@ in
   # Hardened Linux
   hardenedLinuxPackagesFor = kernel': overrides:
     let # Note: We use this hack since the hardened patches can lag behind and we don't want to delay updates:
-      linux_latest_for_hardened = pkgs.linux_5_10;
+      linux_latest_for_hardened = pkgs.linux_5_11;
       kernel = (if kernel' == pkgs.linux_latest then linux_latest_for_hardened else kernel').override overrides;
     in linuxPackagesFor (kernel.override {
       structuredExtraConfig = import ../os-specific/linux/kernel/hardened/config.nix {
@@ -19631,7 +19685,10 @@ in
 
   azpainter = callPackage ../applications/graphics/azpainter { };
 
-  bambootracker = libsForQt5.callPackage ../applications/audio/bambootracker { };
+  bambootracker = libsForQt5.callPackage ../applications/audio/bambootracker {
+    jack = libjack2;
+    inherit (darwin.apple_sdk.frameworks) CoreAudio CoreMIDI CoreFoundation CoreServices;
+  };
 
   cadence = let
     # Use Qt 5.14 consistently
@@ -21240,7 +21297,7 @@ in
     libde265 = null;
   };
 
-  imagemagick = callPackage ../applications/graphics/ImageMagick {
+  imagemagick = callPackage ../applications/graphics/ImageMagick/6.x.nix {
     inherit (darwin.apple_sdk.frameworks) ApplicationServices;
     ghostscript = null;
   };
@@ -23299,9 +23356,7 @@ in
   # this can be changed to python3 once pyside2 is updated to support the latest python version
   syncplay = python37.pkgs.callPackage ../applications/networking/syncplay { };
 
-  inherit (callPackages ../applications/networking/syncthing {
-    buildGoModule = buildGo114Module;
-  })
+  inherit (callPackages ../applications/networking/syncthing { })
     syncthing
     syncthing-cli
     syncthing-discovery
@@ -25092,6 +25147,8 @@ in
   pioneer = callPackage ../games/pioneer { };
 
   pioneers = callPackage ../games/pioneers { };
+
+  place-cursor-at = callPackage ../applications/misc/place-cursor-at {};
 
   planetary_annihilation = callPackage ../games/planetaryannihilation { };
 
